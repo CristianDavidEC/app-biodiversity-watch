@@ -1,0 +1,39 @@
+proyecto-biodiversidad/
+├── assets/                     # Recursos estáticos
+├── components/                 # Componentes reutilizables
+│   ├── auth/
+│   ├── common/
+│   ├── maps/
+│   ├── observation/
+│   └── species/
+├── context/                    # Contextos globales
+├── hooks/                      # Custom hooks
+├── utils/                      # Funciones utilitarias
+├── app/                        # ¡Aquí es donde ocurre la magia del routing!
+│   ├── _layout.js              # Layout principal de la aplicación
+│   ├── index.js                # Pantalla de inicio o redirección
+│   ├── login.js                # Pantalla de login
+│   ├── register.js             # Pantalla de registro
+│   ├── (tabs)/                 # Grupo de tabs (navegación inferior)
+│   │   ├── _layout.js          # Layout para las tabs
+│   │   ├── home.js             # Tab de inicio
+│   │   ├── map/                # Tab de mapa con subrutas
+│   │   │   ├── _layout.js      # Layout para sección de mapas
+│   │   │   ├── index.js        # Vista principal del mapa
+│   │   │   └── [id].js         # Vista detallada de una ubicación en el mapa
+│   │   ├── camera.js           # Tab de cámara
+│   │   └── profile.js          # Tab de perfil
+│   ├── observation/            # Rutas para observaciones
+│   │   ├── _layout.js          # Layout para observaciones
+│   │   ├── index.js            # Lista de observaciones
+│   │   ├── new.js              # Crear nueva observación
+│   │   └── [id].js             # Detalles de una observación específica
+│   └── species/                # Rutas para especies
+│       ├── _layout.js          # Layout para especies
+│       ├── index.js            # Lista de especies
+│       └── [id].js             # Detalles de una especie específica
+├── app.json                    # Configuración de Expo
+├── babel.config.js             # Configuración de Babel
+└── package.json                # Dependencias
+
+https://claude.ai/share/95290ffe-a375-4614-aa99-574d0b216f2a
