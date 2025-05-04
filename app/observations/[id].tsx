@@ -1,6 +1,6 @@
 import DetailsObservation from "@/components/observations/DetailsObservation";
 import ImageCarousel from "@/components/observations/ImageCarousel";
-import { View } from "react-native";
+import { ScrollView } from "react-native";
 
 export default function ObservationDetail() {
 
@@ -11,11 +11,10 @@ export default function ObservationDetail() {
     ]
 
     return (
-
-        <View className="flex-1 bg-gray-900">
+        <ScrollView className="flex-1 bg-black">
             <ImageCarousel
                 images={sampleImages} />
             <DetailsObservation />
-        </View>
+        </ScrollView>
     );
 }

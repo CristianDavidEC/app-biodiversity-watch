@@ -30,15 +30,15 @@ export default function RootLayout() {
   }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <SafeAreaView className="flex-1 bg-stone-950" >
+    <SafeAreaView className="flex-1 bg-black" >
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack>
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="+not-found" />
           <Stack.Screen name="observations/[id]" options={{ title: 'Observación' }} />
         </Stack>
         <StatusBar style="auto" />
-      </SafeAreaView>
-    </ThemeProvider>
+      </ThemeProvider>
+    </SafeAreaView>
   );
 }
