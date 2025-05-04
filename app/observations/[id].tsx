@@ -1,10 +1,8 @@
-import { useLocalSearchParams } from "expo-router";
-import { View, Text } from "react-native";
-import ImageCarousel from "@/components/observations/ImageCarousel";
 import DetailsObservation from "@/components/observations/DetailsObservation";
+import ImageCarousel from "@/components/observations/ImageCarousel";
+import { View } from "react-native";
 
 export default function ObservationDetail() {
-    const { id } = useLocalSearchParams();
 
     const sampleImages = [
         { uri: 'https://fastly.picsum.photos/id/767/300/200.jpg?hmac=TTc0t0lEJWrTHSWhos7VTReXgTKIk-OUc3fQA1w91sI' },
@@ -13,7 +11,8 @@ export default function ObservationDetail() {
     ]
 
     return (
-        <View>
+
+        <View className="flex-1 bg-gray-900">
             <ImageCarousel
                 images={sampleImages} />
             <DetailsObservation />

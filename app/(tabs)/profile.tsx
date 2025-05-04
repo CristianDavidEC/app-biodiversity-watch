@@ -1,6 +1,6 @@
-import { Text, View } from 'react-native';
-import UserProfileHeader from '@/components/profile/UserProfileHeader';
 import GaleryObservation from '@/components/profile/GaleryObservation';
+import UserProfileHeader from '@/components/profile/UserProfileHeader';
+import { View } from 'react-native';
 
 export default function Profile() {
   return (
