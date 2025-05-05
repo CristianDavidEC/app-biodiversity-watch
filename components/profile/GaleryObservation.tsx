@@ -1,10 +1,8 @@
-import { FlatList, SafeAreaView } from "react-native";
+import { FlatList } from "react-native";
 import ItemGalery from "./ItemGalery";
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 
 export default function GaleryObservation({ header }: any) {
-    const insets = useSafeAreaInsets();
 
     const galeryData = [
         {
