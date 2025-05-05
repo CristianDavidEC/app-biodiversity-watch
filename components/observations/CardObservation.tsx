@@ -32,7 +32,7 @@ export default function CardObservation(props: GalleryItemProps) {
         <Link href={{ pathname: "/observations/[id]", params: { id: props.id } }} asChild>
             <Pressable
                 onPress={() => console.log('Pressed!')}
-                className="bg-stone-950 border border-stone-700 rounded-lg w-[98%] m-[1%] p-3">
+                className="bg-stone-950 border border-stone-700 rounded-lg w-[85%] m-[1%] p-3 self-center">
                 <Image source={{ uri: imageUrl! }} className="w-full h-72 object-contain rounded-sm mb-3" />
                 <Text className='text-xs text-gray-500'>{props.date}</Text>
                 <Text className='text-lg text-white'>{props.description}</Text>
