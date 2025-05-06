@@ -179,7 +179,7 @@ const styles = StyleSheet.create({
     filtersContainer: {
         marginTop: 16,
         padding: 16,
-        backgroundColor: '#f5f5f5',
+        backgroundColor: '#00000',
         borderRadius: 8,
         borderWidth: 1,
         borderColor: '#ddd'
