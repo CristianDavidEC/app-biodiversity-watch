@@ -1,6 +1,6 @@
 import { Session } from "@supabase/supabase-js";
 import { router } from "expo-router";
-import { createContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 
 type AuthData = {
@@ -59,3 +59,5 @@ export default function AuthProvider(props: Props) {
         </AuthContext.Provider>
     );
 }
+
+export const useAuth = () => useContext(AuthContext);
