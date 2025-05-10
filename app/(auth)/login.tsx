@@ -1,10 +1,9 @@
-import React, { useState } from 'react'; // Importa React y el hook useState
+import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import {
     Alert, // Para mostrar mensajes simples
     KeyboardAvoidingView, // Ayuda a que el teclado no tape los inputs
-    Platform // Para ajustes específicos de iOS/Android
-    ,
-
+    Platform,
     StyleSheet,
     Text,
     TextInput,
@@ -12,9 +11,10 @@ import {
     View
 } from 'react-native';
 
-const LoginScreen = ({ navigation }) => { // Recibe 'navigation' si usas React Navigation
+const LoginScreen = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const router = useRouter();
 
     const handleLogin = () => {
         // --- Validación básica ---
@@ -84,7 +84,7 @@ const LoginScreen = ({ navigation }) => { // Recibe 'navigation' si usas React N
                     <Text style={styles.linkText}>¿Olvidaste tu contraseña?</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => Alert.alert('Info', 'Funcionalidad no implementada')}>
+                <TouchableOpacity onPress={() => router.push('/register')}>
                     <Text style={styles.linkText}>¿No tienes cuenta? Regístrate</Text>
                 </TouchableOpacity>
 
