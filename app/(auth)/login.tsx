@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
+    ActivityIndicator,
     Alert, // Para mostrar mensajes simples
     KeyboardAvoidingView, // Ayuda a que el teclado no tape los inputs
     Platform,
@@ -10,40 +11,50 @@ import {
     TouchableOpacity,
     View
 } from 'react-native';
+import { supabase } from '../../lib/supabase';
 
 const LoginScreen = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
     const router = useRouter();
 
-    const handleLogin = () => {
-        // --- Validación básica ---
+    const handleLogin = async () => {
+        // Validación básica
         if (!email || !password) {
             Alert.alert('Error', 'Por favor, ingresa tu correo y contraseña.');
             return;
         }
 
-        // --- Lógica de inicio de sesión ---
-        // Aquí iría la lógica real:
-        // 1. Validar el formato del email (opcional pero recomendado).
-        // 2. Enviar 'email' y 'password' a tu API backend para autenticación.
-        // 3. Manejar la respuesta:
-        //    - Si es exitosa: guardar token de usuario, navegar a la pantalla principal, etc.
-        //    - Si hay error: mostrar mensaje de error al usuario.
+        try {
+            setLoading(true);
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
 
-        console.log('Intentando iniciar sesión con:');
-        console.log('Email:', email);
-        console.log('Password:', password); // ¡Nunca mostrar la contraseña en producción real!
+            if (error) {
+                throw error;
+            }
 
-        // Ejemplo de simulación de éxito (reemplazar con lógica real)
-        Alert.alert('Éxito (Simulado)', '¡Inicio de sesión correcto!');
-        // Aquí podrías navegar a otra pantalla, por ejemplo:
-        // if (navigation) {
-        //   navigation.navigate('Home'); // Asumiendo que tienes una pantalla 'Home'
-        // }
+            if (data?.user) {
+                // La navegación se maneja automáticamente por el AuthProvider
+                // que detecta el cambio en el estado de autenticación
+            }
+        } catch (error: any) {
+            let errorMessage = 'Error al iniciar sesión';
 
-        // Ejemplo de simulación de error (reemplazar con lógica real)
-        // Alert.alert('Error de Autenticación', 'Correo o contraseña incorrectos.');
+            // Manejo específico de errores comunes
+            if (error.message.includes('Invalid login credentials')) {
+                errorMessage = 'Correo o contraseña incorrectos';
+            } else if (error.message.includes('Email not confirmed')) {
+                errorMessage = 'Por favor, verifica tu correo electrónico antes de iniciar sesión';
+            }
+
+            Alert.alert('Error', errorMessage);
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -64,6 +75,7 @@ const LoginScreen = () => {
                     keyboardType="email-address" // Muestra teclado optimizado para email
                     autoCapitalize="none" // Evita la capitalización automática
                     autoCorrect={false} // Desactiva la autocorrección
+                    editable={!loading}
                 />
 
                 <TextInput
@@ -73,19 +85,38 @@ const LoginScreen = () => {
                     value={password}
                     onChangeText={setPassword} // Actualiza el estado 'password'
                     secureTextEntry={true} // Oculta los caracteres de la contraseña
+                    editable={!loading}
                 />
 
-                <TouchableOpacity style={styles.button} onPress={handleLogin}>
-                    <Text style={styles.buttonText}>Ingresar</Text>
+                <TouchableOpacity
+                    style={[styles.button, loading && styles.buttonDisabled]}
+                    onPress={handleLogin}
+                    disabled={loading}
+                >
+                    {loading ? (
+                        <ActivityIndicator color="#ffffff" />
+                    ) : (
+                        <Text style={styles.buttonText}>Ingresar</Text>
+                    )}
                 </TouchableOpacity>
 
                 {/* Opcional: Enlaces para Recuperar Contraseña o Registrarse */}
-                <TouchableOpacity onPress={() => Alert.alert('Info', 'Funcionalidad no implementada')}>
-                    <Text style={styles.linkText}>¿Olvidaste tu contraseña?</Text>
+                <TouchableOpacity
+                    onPress={() => Alert.alert('Info', 'Funcionalidad no implementada')}
+                    disabled={loading}
+                >
+                    <Text style={[styles.linkText, loading && styles.linkTextDisabled]}>
+                        ¿Olvidaste tu contraseña?
+                    </Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => router.push('/register')}>
-                    <Text style={styles.linkText}>¿No tienes cuenta? Regístrate</Text>
+                <TouchableOpacity
+                    onPress={() => router.push('/register')}
+                    disabled={loading}
+                >
+                    <Text style={[styles.linkText, loading && styles.linkTextDisabled]}>
+                        ¿No tienes cuenta? Regístrate
+                    </Text>
                 </TouchableOpacity>
 
             </View>
@@ -137,6 +168,9 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.2,
         shadowRadius: 1,
     },
+    buttonDisabled: {
+        backgroundColor: '#cccccc',
+    },
     buttonText: {
         color: '#ffffff', // Texto blanco
         fontSize: 18,
@@ -147,6 +181,9 @@ const styles = StyleSheet.create({
         color: '#007bff', // Mismo color que el botón para consistencia
         fontSize: 14,
         textDecorationLine: 'underline', // Subrayado para indicar que es un enlace
+    },
+    linkTextDisabled: {
+        color: '#cccccc',
     }
 });
 
