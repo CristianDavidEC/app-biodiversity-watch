@@ -38,6 +38,7 @@ export default function RootLayout() {
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" />
             <Stack.Screen name="observations/[id]" options={{ title: 'Observación' }} />
+            <Stack.Screen name="observations/SpeciesDetails" options={{ title: 'Especie' }} />
           </Stack>
           <StatusBar style="auto" />
         </ThemeProvider>

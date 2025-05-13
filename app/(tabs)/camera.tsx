@@ -1,6 +1,6 @@
 import { CameraIcon } from "@/components/common/icons";
 import { FontAwesome } from '@expo/vector-icons';
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { useFocusEffect, useIsFocused, useNavigation } from "@react-navigation/native";
 import type { StackNavigationProp } from '@react-navigation/stack';
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
@@ -19,6 +19,7 @@ export default function CameraScreen() {
   const [facing, setFacing] = useState<CameraType>('back');
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<any>(null);
+  const isFocused = useIsFocused();
 
   // Limpiar imágenes y referencia de cámara al salir del tab
   useFocusEffect(
@@ -67,12 +68,14 @@ export default function CameraScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Toma o selecciona una o varias fotos</Text>
       <View style={styles.cameraContainer}>
-        <CameraView
-          ref={cameraRef}
-          style={styles.camera}
-          facing={facing}
-          mode="picture"
-        />
+        {isFocused && (
+          <CameraView
+            ref={cameraRef}
+            style={styles.camera}
+            facing={facing}
+            mode="picture"
+          />
+        )}
         <TouchableOpacity style={styles.galleryButton} onPress={pickImages}>
           <FontAwesome name="image" size={28} color="white" />
         </TouchableOpacity>
