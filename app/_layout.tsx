@@ -32,13 +32,16 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <SafeAreaView className="flex-1 bg-black" >
+      <SafeAreaView className="flex-1 bg-black" edges={['left', 'right', 'bottom']} >
         <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen name="+not-found" />
-            <Stack.Screen name="observations/[id]" options={{ title: 'Observación' }} />
+            <Stack.Screen name="observations/[id]" options={{ title: 'Observación', headerStyle: { backgroundColor: '#111' }, headerTitleStyle: { fontSize: 16, fontWeight: 'bold' } }} />
             <Stack.Screen name="observations/SpeciesDetails" options={{ title: 'Especie' }} />
+            <Stack.Screen name="ObservationForm" options={{ title: 'Creación de Observación' }} />
+            <Stack.Screen name="(auth)/login" options={{ title: 'Iniciar Sesión' }} />
+            <Stack.Screen name="(auth)/forgot-password" options={{ title: 'Recuperar Contraseña' }} />
           </Stack>
           <StatusBar style="auto" />
         </ThemeProvider>

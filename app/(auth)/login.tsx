@@ -2,16 +2,18 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
     ActivityIndicator,
-    Alert, // Para mostrar mensajes simples
-    KeyboardAvoidingView, // Ayuda a que el teclado no tape los inputs
-    Platform,
-    StyleSheet,
+    Alert,
+    Dimensions,
+    Image,
+    ScrollView,
     Text,
     TextInput,
     TouchableOpacity,
     View
 } from 'react-native';
 import { supabase } from '../../lib/supabase';
+
+const { width } = Dimensions.get('window');
 
 const LoginScreen = () => {
     const [email, setEmail] = useState('');
@@ -20,7 +22,6 @@ const LoginScreen = () => {
     const router = useRouter();
 
     const handleLogin = async () => {
-        // Validación básica
         if (!email || !password) {
             Alert.alert('Error', 'Por favor, ingresa tu correo y contraseña.');
             return;
@@ -44,7 +45,6 @@ const LoginScreen = () => {
         } catch (error: any) {
             let errorMessage = 'Error al iniciar sesión';
 
-            // Manejo específico de errores comunes
             if (error.message.includes('Invalid login credentials')) {
                 errorMessage = 'Correo o contraseña incorrectos';
             } else if (error.message.includes('Email not confirmed')) {
@@ -58,54 +58,74 @@ const LoginScreen = () => {
     };
 
     return (
-        // KeyboardAvoidingView ayuda a que los inputs suban cuando aparece el teclado
-        <KeyboardAvoidingView
-            style={styles.container}
-            behavior={Platform.OS === "ios" ? "padding" : "height"} // Ajuste según plataforma
+        <ScrollView
+            className="flex-1"
+            contentContainerStyle={{ flexGrow: 1 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
         >
-            <View style={styles.innerContainer}>
-                <Text style={styles.title}>Iniciar Sesión</Text>
+            <View className="h-[250px] w-full relative">
+                <Image
+                    source={require('../../assets/images/auth.png')}
+                    className="w-full h-full "
+                    resizeMode="cover"
+                />
+                <View className="absolute inset-0 bg-black/50" />
+            </View>
+
+            <View className="flex-1 px-8 pt-8 pb-12">
+                <Text className="text-3xl font-bold text-white mb-2">
+                    Bienvenido
+                </Text>
+                <Text className="text-base text-gray-400 mb-8">
+                    Inicia sesión para continuar
+                </Text>
 
                 <TextInput
-                    style={styles.input}
+                    className="w-full h-[55px] bg-[#1E1E1E] rounded-xl px-5 mb-4 text-base text-white border border-gray-700"
                     placeholder="Correo Electrónico"
-                    placeholderTextColor="#888" // Color del texto del placeholder
+                    placeholderTextColor="#666"
                     value={email}
-                    onChangeText={setEmail} // Actualiza el estado 'email'
-                    keyboardType="email-address" // Muestra teclado optimizado para email
-                    autoCapitalize="none" // Evita la capitalización automática
-                    autoCorrect={false} // Desactiva la autocorrección
+                    onChangeText={setEmail}
+                    keyboardType="email-address"
+                    autoCapitalize="none"
+                    autoCorrect={false}
                     editable={!loading}
+                    returnKeyType="next"
                 />
 
                 <TextInput
-                    style={styles.input}
+                    className="w-full h-[55px] bg-[#1E1E1E] rounded-xl px-5 mb-4 text-base text-white border border-gray-700"
                     placeholder="Contraseña"
-                    placeholderTextColor="#888"
+                    placeholderTextColor="#666"
                     value={password}
-                    onChangeText={setPassword} // Actualiza el estado 'password'
-                    secureTextEntry={true} // Oculta los caracteres de la contraseña
+                    onChangeText={setPassword}
+                    secureTextEntry={true}
                     editable={!loading}
+                    returnKeyType="done"
+                    onSubmitEditing={handleLogin}
                 />
 
                 <TouchableOpacity
-                    style={[styles.button, loading && styles.buttonDisabled]}
+                    className={`w-full h-[55px] bg-[#27AE60] justify-center items-center rounded-xl mt-5 shadow-lg ${loading ? 'bg-[#1E1E1E]' : ''}`}
                     onPress={handleLogin}
                     disabled={loading}
                 >
                     {loading ? (
-                        <ActivityIndicator color="#ffffff" />
+                        <ActivityIndicator color="#27AE60" />
                     ) : (
-                        <Text style={styles.buttonText}>Ingresar</Text>
+                        <Text className="text-white text-lg font-semibold">
+                            Ingresar
+                        </Text>
                     )}
                 </TouchableOpacity>
 
-                {/* Opcional: Enlaces para Recuperar Contraseña o Registrarse */}
                 <TouchableOpacity
-                    onPress={() => Alert.alert('Info', 'Funcionalidad no implementada')}
+                    onPress={() => router.push('/forgot-password')}
                     disabled={loading}
+                    className="mt-5"
                 >
-                    <Text style={[styles.linkText, loading && styles.linkTextDisabled]}>
+                    <Text className={`text-sm text-center ${loading ? 'text-gray-600' : 'text-[#27AE60]'}`}>
                         ¿Olvidaste tu contraseña?
                     </Text>
                 </TouchableOpacity>
@@ -113,78 +133,15 @@ const LoginScreen = () => {
                 <TouchableOpacity
                     onPress={() => router.push('/register')}
                     disabled={loading}
+                    className="mt-5"
                 >
-                    <Text style={[styles.linkText, loading && styles.linkTextDisabled]}>
+                    <Text className={`text-sm text-center ${loading ? 'text-gray-600' : 'text-[#27AE60]'}`}>
                         ¿No tienes cuenta? Regístrate
                     </Text>
                 </TouchableOpacity>
-
             </View>
-        </KeyboardAvoidingView>
+        </ScrollView>
     );
 };
-
-// --- Estilos ---
-const styles = StyleSheet.create({
-    container: {
-        flex: 1, // Ocupa todo el espacio disponible
-        backgroundColor: '#f0f0f0', // Un color de fondo suave
-    },
-    innerContainer: {
-        flex: 1,
-        justifyContent: 'center', // Centra el contenido verticalmente
-        alignItems: 'center', // Centra el contenido horizontalmente
-        paddingHorizontal: 30, // Espaciado a los lados
-    },
-    title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 30, // Espacio debajo del título
-    },
-    input: {
-        width: '100%', // Ocupa todo el ancho disponible
-        height: 50,
-        backgroundColor: '#fff', // Fondo blanco para el input
-        borderWidth: 1,
-        borderColor: '#ddd', // Borde sutil
-        borderRadius: 8, // Bordes redondeados
-        paddingHorizontal: 15, // Espaciado interno horizontal
-        marginBottom: 15, // Espacio debajo de cada input
-        fontSize: 16,
-        color: '#333', // Color del texto ingresado
-    },
-    button: {
-        width: '100%',
-        height: 50,
-        backgroundColor: '#007bff', // Color azul típico para botones primarios
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 8,
-        marginTop: 10, // Espacio encima del botón
-        elevation: 2, // Sombra leve en Android
-        shadowColor: '#000', // Sombra en iOS
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
-        shadowRadius: 1,
-    },
-    buttonDisabled: {
-        backgroundColor: '#cccccc',
-    },
-    buttonText: {
-        color: '#ffffff', // Texto blanco
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    linkText: {
-        marginTop: 20, // Espacio encima de los enlaces
-        color: '#007bff', // Mismo color que el botón para consistencia
-        fontSize: 14,
-        textDecorationLine: 'underline', // Subrayado para indicar que es un enlace
-    },
-    linkTextDisabled: {
-        color: '#cccccc',
-    }
-});
 
 export default LoginScreen;

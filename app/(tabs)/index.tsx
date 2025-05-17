@@ -57,7 +57,6 @@ export default function HomeScreen() {
   ];
 
   const handleMapPress = () => {
-    // Aquí puedes añadir la lógica para navegar a la vista de mapa
     console.log('Navegando a la vista de mapa...');
   };
 
@@ -73,11 +72,10 @@ export default function HomeScreen() {
         )}
       />
 
-      {/* Botón flotante de mapa */}
       <TouchableOpacity
-        style={styles.floatingButton}
         onPress={handleMapPress}
         activeOpacity={0.8}
+        className='bg-emerald-600 absolute bottom-10 right-10 w-16 h-16 rounded-full flex items-center justify-center'
       >
         <LocationIcon size={24} color="#fff" />
       </TouchableOpacity>
@@ -89,21 +87,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     position: 'relative',
-  },
-  floatingButton: {
-    position: 'absolute',
-    bottom: 20,
-    alignSelf: 'flex-end',
-    backgroundColor: '#2196F3', // Color azul que representa el mar en un mapa
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 8, // Sombra para Android
-    shadowColor: '#000', // Sombra para iOS
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
   }
 });

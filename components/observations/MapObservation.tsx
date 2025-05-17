@@ -22,7 +22,7 @@ export default function MapObservation({ latitude, longitude }: MapObservationPr
                 zoomEnabled={true}
             >
                 <Marker coordinate={{ latitude, longitude }}>
-                    <FontAwesome6 name="map-location-dot" size={32} color="#4E9889" />
+                    <FontAwesome6 name="location-pin" size={32} color="#0E9F6E" />
                 </Marker>
             </MapView>
         </View>

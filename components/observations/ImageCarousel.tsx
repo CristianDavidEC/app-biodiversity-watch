@@ -1,12 +1,12 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useCallback, useRef, useState } from 'react';
 import {
-    View,
+    Dimensions,
     FlatList,
     Image,
-    Dimensions,
-    StyleSheet,
-    ViewToken,
     ImageSourcePropType,
+    StyleSheet,
+    View,
+    ViewToken,
 } from 'react-native';
 
 const { width: screenWidth } = Dimensions.get('window');
@@ -65,7 +65,7 @@ const ImageCarousel: React.FC<ImageCarouselProps> = ({
                         style={[
                             {
                                 backgroundColor:
-                                    index === activeIndex ? "#4E9889" : "#CCCCCC",
+                                    index === activeIndex ? "#0E9F6E" : "#CCCCCC",
                             },
                         ]}
                         className='rounded-full w-2 h-2 mx-1'

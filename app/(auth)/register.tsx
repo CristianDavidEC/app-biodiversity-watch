@@ -2,16 +2,19 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import {
     Alert,
+    Dimensions,
+    Image,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
     View
 } from 'react-native';
 import { supabase } from '../../lib/supabase';
+
+const { width } = Dimensions.get('window');
 
 const RegisterScreen = () => {
     const [email, setEmail] = useState('');
@@ -74,151 +77,110 @@ const RegisterScreen = () => {
 
     return (
         <KeyboardAvoidingView
-            style={styles.container}
+            className="flex-1 bg-[#121212]"
             behavior={Platform.OS === "ios" ? "padding" : "height"}
+            keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
         >
-            <ScrollView contentContainerStyle={styles.scrollContainer}>
-                <View style={styles.innerContainer}>
-                    <Text style={styles.title}>Crear Cuenta</Text>
+            <ScrollView
+                className="flex-1"
+                contentContainerStyle={{ flexGrow: 1 }}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+            >
+                <View className="h-[200px] w-full relative">
+                    <Image
+                        source={require('../../assets/images/register.png')}
+                        className="w-full h-full"
+                        resizeMode="cover"
+                    />
+                    <View className="absolute inset-0 bg-black/50" />
+                </View>
+
+                <View className="flex-1 px-8 pt-8 pb-12">
+                    <Text className="text-3xl font-bold text-white mb-2">
+                        Crear Cuenta
+                    </Text>
+                    <Text className="text-base text-gray-400 mb-8">
+                        Únete a nuestra comunidad
+                    </Text>
 
                     <TextInput
-                        style={styles.input}
+                        className="w-full h-[55px] bg-[#1E1E1E] rounded-xl px-5 mb-4 text-base text-white border border-gray-700"
                         placeholder="Nombre Completo"
-                        placeholderTextColor="#888"
+                        placeholderTextColor="#666"
                         value={name}
                         onChangeText={setName}
                         autoCapitalize="words"
+                        returnKeyType="next"
                     />
 
                     <TextInput
-                        style={styles.input}
+                        className="w-full h-[55px] bg-[#1E1E1E] rounded-xl px-5 mb-4 text-base text-white border border-gray-700"
                         placeholder="Correo Electrónico"
-                        placeholderTextColor="#888"
+                        placeholderTextColor="#666"
                         value={email}
                         onChangeText={setEmail}
                         keyboardType="email-address"
                         autoCapitalize="none"
                         autoCorrect={false}
+                        returnKeyType="next"
                     />
 
                     <TextInput
-                        style={styles.input}
+                        className="w-full h-[55px] bg-[#1E1E1E] rounded-xl px-5 mb-4 text-base text-white border border-gray-700"
                         placeholder="Contraseña"
-                        placeholderTextColor="#888"
+                        placeholderTextColor="#666"
                         value={password}
                         onChangeText={setPassword}
                         secureTextEntry={true}
+                        returnKeyType="next"
                     />
 
                     <TextInput
-                        style={styles.input}
+                        className="w-full h-[55px] bg-[#1E1E1E] rounded-xl px-5 mb-4 text-base text-white border border-gray-700"
                         placeholder="Profesión"
-                        placeholderTextColor="#888"
+                        placeholderTextColor="#666"
                         value={profession}
                         onChangeText={setProfession}
                         autoCapitalize="words"
+                        returnKeyType="next"
                     />
 
                     <TextInput
-                        style={[styles.input, styles.textArea]}
+                        className="w-full h-[120px] bg-[#1E1E1E] rounded-xl px-5 pt-4 mb-4 text-base text-white border border-gray-700"
                         placeholder="Descripción de tu perfil"
-                        placeholderTextColor="#888"
+                        placeholderTextColor="#666"
                         value={description}
                         onChangeText={setDescription}
                         multiline={true}
                         numberOfLines={4}
                         textAlignVertical="top"
+                        returnKeyType="done"
+                        onSubmitEditing={handleRegister}
                     />
 
                     <TouchableOpacity
-                        style={[styles.button, loading && styles.buttonDisabled]}
+                        className={`w-full h-[55px] bg-[#27AE60] justify-center items-center rounded-xl mt-5 shadow-lg ${loading ? 'bg-[#1E1E1E]' : ''}`}
                         onPress={handleRegister}
                         disabled={loading}
                     >
-                        <Text style={styles.buttonText}>
+                        <Text className="text-white text-lg font-semibold">
                             {loading ? 'Registrando...' : 'Registrarse'}
                         </Text>
                     </TouchableOpacity>
 
                     <TouchableOpacity
                         onPress={() => router.replace('/login')}
-                        style={styles.linkContainer}
+                        className="mt-5"
                     >
-                        <Text style={styles.linkText}>¿Ya tienes cuenta? Inicia sesión</Text>
+                        <Text className="text-[#27AE60] text-sm text-center">
+                            ¿Ya tienes cuenta? Inicia sesión
+                        </Text>
                     </TouchableOpacity>
                 </View>
             </ScrollView>
         </KeyboardAvoidingView>
     );
 };
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#f0f0f0',
-    },
-    scrollContainer: {
-        flexGrow: 1,
-    },
-    innerContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 30,
-        paddingVertical: 20,
-    },
-    title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 30,
-    },
-    input: {
-        width: '100%',
-        height: 50,
-        backgroundColor: '#fff',
-        borderWidth: 1,
-        borderColor: '#ddd',
-        borderRadius: 8,
-        paddingHorizontal: 15,
-        marginBottom: 15,
-        fontSize: 16,
-        color: '#333',
-    },
-    textArea: {
-        height: 100,
-        paddingTop: 15,
-    },
-    button: {
-        width: '100%',
-        height: 50,
-        backgroundColor: '#007bff',
-        justifyContent: 'center',
-        alignItems: 'center',
-        borderRadius: 8,
-        marginTop: 10,
-        elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.2,
-        shadowRadius: 1,
-    },
-    buttonDisabled: {
-        backgroundColor: '#cccccc',
-    },
-    buttonText: {
-        color: '#ffffff',
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    linkContainer: {
-        marginTop: 20,
-    },
-    linkText: {
-        color: '#007bff',
-        fontSize: 14,
-        textDecorationLine: 'underline',
-    }
-});
 
 export default RegisterScreen; 

@@ -2,7 +2,7 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import * as Location from 'expo-location';
 import { useEffect, useState } from "react";
-import { Button, Image, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 // Definición del tipo de parámetros de la ruta
 type RootStackParamList = {
@@ -19,6 +19,7 @@ export default function ObservationForm() {
     const [notes, setNotes] = useState("");
     const [date, setDate] = useState(new Date());
     const [showDatePicker, setShowDatePicker] = useState(false);
+    const [showTimePicker, setShowTimePicker] = useState(false);
     const [location, setLocation] = useState<Location.LocationObject | null>(null);
     const [manualLocation, setManualLocation] = useState("");
     const [selectedState, setSelectedState] = useState<ObservationState>('vivo');
@@ -41,25 +42,44 @@ export default function ObservationForm() {
         setShowDatePicker(false);
         if (selectedDate) {
             setDate(selectedDate);
+            setShowTimePicker(true);
         }
     };
 
+    const onTimeChange = (event: any, selectedTime?: Date) => {
+        setShowTimePicker(false);
+        if (selectedTime) {
+            const newDate = new Date(date);
+            newDate.setHours(selectedTime.getHours());
+            newDate.setMinutes(selectedTime.getMinutes());
+            setDate(newDate);
+        }
+    };
+
+    const formatDateTime = (date: Date) => {
+        const pad = (n: number) => n < 10 ? '0' + n : n;
+        return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    };
+
     return (
-        <ScrollView contentContainerStyle={styles.container}>
-            <Text style={styles.title}>Creación de Observación</Text>
+        <ScrollView contentContainerStyle={{ flexGrow: 1, alignItems: 'center', padding: 20 }}>
+            <ScrollView horizontal className="mb-6 w-full">
+                <View className="flex-row justify-center w-full">
+                    {imageUris.map((uri, idx) => (
+                        <Image key={idx} source={{ uri }} className="w-48 h-40 rounded-2xl mx-2" />
+                    ))}
+                </View>
+            </ScrollView>
 
-            <View style={styles.imagesRow}>
-                {imageUris.map((uri, idx) => (
-                    <Image key={idx} source={{ uri }} style={styles.image} />
-                ))}
-            </View>
-
-            <View style={styles.section}>
-                <Text style={styles.label}>Fecha de Captura</Text>
-                <Button
-                    title={date.toLocaleDateString()}
+            <View className="w-full mb-5">
+                <Text className="text-gray-300 text-base mb-2 font-bold">Fecha y Hora de Captura</Text>
+                <TouchableOpacity
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 mb-2"
                     onPress={() => setShowDatePicker(true)}
-                />
+                    activeOpacity={0.7}
+                >
+                    <Text className="text-gray-100 text-base">{formatDateTime(date)}</Text>
+                </TouchableOpacity>
                 {showDatePicker && (
                     <DateTimePicker
                         value={date}
@@ -68,89 +88,74 @@ export default function ObservationForm() {
                         onChange={onDateChange}
                     />
                 )}
+                {showTimePicker && (
+                    <DateTimePicker
+                        value={date}
+                        mode="time"
+                        display="default"
+                        onChange={onTimeChange}
+                    />
+                )}
             </View>
 
-            <View style={styles.section}>
-                <Text style={styles.label}>Ubicación</Text>
+            <View className="w-full mb-5">
+                <Text className="text-gray-300 text-base mb-2 font-bold">Ubicación</Text>
                 {location ? (
-                    <Text style={styles.locationText}>
-                        Lat: {location.coords.latitude.toFixed(6)},
-                        Long: {location.coords.longitude.toFixed(6)}
+                    <Text className="text-gray-400 text-sm mb-2">
+                        Lat: {location.coords.latitude.toFixed(6)}, Long: {location.coords.longitude.toFixed(6)}
                     </Text>
                 ) : (
                     <TextInput
-                        style={styles.input}
+                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-gray-100"
                         placeholder="Ingresa la ubicación manualmente..."
+                        placeholderTextColor="#9CA3AF"
                         value={manualLocation}
                         onChangeText={setManualLocation}
                     />
                 )}
             </View>
 
-            <View style={styles.section}>
-                <Text style={styles.label}>Estado del Especimen</Text>
-                <View style={styles.stateButtons}>
+            <View className="w-full mb-5">
+                <Text className="text-gray-300 text-base mb-2 font-bold">Estado del Especimen</Text>
+                <View className="flex-row flex-wrap gap-2 mt-2">
                     {states.map((state) => (
-                        <Button
+                        <TouchableOpacity
                             key={state}
-                            title={state.charAt(0).toUpperCase() + state.slice(1)}
-                            color={selectedState === state ? '#4CAF50' : '#2196F3'}
+                            className={`px-4 py-2 rounded-lg ${selectedState === state ? 'bg-[#bbf451]' : 'bg-[#0E9F6E]'} `}
                             onPress={() => setSelectedState(state)}
-                        />
+                        >
+                            <Text className={`font-bold uppercase text-xs ${selectedState === state ? 'text-black' : 'text-white'}`}>{state}</Text>
+                        </TouchableOpacity>
                     ))}
                 </View>
             </View>
 
-            <View style={styles.section}>
-                <Text style={styles.label}>Notas</Text>
+            <View className="w-full mb-6">
+                <Text className="text-gray-300 text-base mb-2 font-bold">Notas</Text>
                 <TextInput
-                    style={styles.input}
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-gray-100 min-h-[80px]"
                     placeholder="Describe lo que observaste..."
+                    placeholderTextColor="#9CA3AF"
                     value={notes}
                     onChangeText={setNotes}
                     multiline
                 />
             </View>
 
-            <View style={styles.buttonRow}>
-                <Button title="Guardar" color="green" onPress={() => navigation.goBack()} />
-                <Button title="Cancelar" color="red" onPress={() => navigation.goBack()} />
+            <View className="w-full flex-row justify-between gap-4 mt-2">
+                <TouchableOpacity
+                    className="flex-1 py-3 rounded-lg bg-emerald-600 items-center"
+                    onPress={() => navigation.goBack()}
+                >
+                    <Text className="text-white font-semibold text-lg">GUARDAR</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                    className="flex-1 py-3 rounded-lg items-center" style={{ backgroundColor: '#ff6467' }}
+                    onPress={() => navigation.goBack()}
+                >
+                    <Text className="text-white font-semibold text-lg">CANCELAR</Text>
+                </TouchableOpacity>
             </View>
         </ScrollView>
     );
-}
-
-const styles = StyleSheet.create({
-    container: { flexGrow: 1, alignItems: "center", padding: 20 },
-    title: { fontSize: 22, fontWeight: "bold", marginBottom: 20 },
-    imagesRow: { flexDirection: 'row', marginBottom: 20 },
-    image: { width: 100, height: 80, borderRadius: 10, marginRight: 10 },
-    section: { width: "100%", marginBottom: 20 },
-    label: { fontSize: 16, marginBottom: 8, fontWeight: '500' },
-    input: {
-        borderWidth: 1,
-        borderColor: "#ccc",
-        borderRadius: 8,
-        padding: 10,
-        minHeight: 60,
-        textAlignVertical: "top",
-        backgroundColor: "#f9f9f9",
-    },
-    buttonRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        width: "100%",
-        gap: 20,
-    },
-    locationText: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 5,
-    },
-    stateButtons: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 10,
-        marginTop: 10,
-    },
-}); 
+} 

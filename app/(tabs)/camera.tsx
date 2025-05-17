@@ -21,7 +21,6 @@ export default function CameraScreen() {
   const cameraRef = useRef<any>(null);
   const isFocused = useIsFocused();
 
-  // Limpiar imágenes y referencia de cámara al salir del tab
   useFocusEffect(
     React.useCallback(() => {
       return () => {
@@ -66,7 +65,7 @@ export default function CameraScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Toma o selecciona una o varias fotos</Text>
+      <Text className="text-white text-2xl font-semibold my-3">Toma o selecciona una o varias fotos</Text>
       <View style={styles.cameraContainer}>
         {isFocused && (
           <CameraView
@@ -83,22 +82,26 @@ export default function CameraScreen() {
       <TouchableOpacity style={styles.captureButtonOverlay} onPress={takePhoto}>
         <CameraIcon color="white" size={48} />
       </TouchableOpacity>
-      <ScrollView horizontal style={{ maxHeight: 120, marginBottom: 20 }}>
+      <ScrollView horizontal style={{ maxHeight: 150 }}>
         {images.map((uri, idx) => (
-          <Image key={idx} source={{ uri }} style={styles.imagePreview} />
+          <Image key={idx} source={{ uri }} className="rounded-xl my-3 w-36 h-36 mx-2" />
         ))}
       </ScrollView>
-      <Button title="Continuar" onPress={goToForm} disabled={images.length === 0} />
+      <TouchableOpacity
+        className={`px-8 py-3 rounded-lg bg-emerald-600 items-center my-2 mx-auto ${images.length === 0 ? 'opacity-50' : ''}`}
+        onPress={goToForm}
+        disabled={images.length === 0}
+      >
+        <Text className="text-white text-lg font-semibold">Continuar</Text>
+      </TouchableOpacity>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000', alignItems: 'center', paddingTop: 30 },
-  title: { fontSize: 22, marginBottom: 10, color: 'white', alignSelf: 'flex-start', marginLeft: 10 },
   cameraContainer: { flex: 1, width: '100%', borderRadius: 16, overflow: 'hidden', position: 'relative', backgroundColor: '#222', justifyContent: 'center', alignItems: 'center' },
-  camera: { flex: 1, width: '100%' },
-  galleryButton: { position: 'absolute', left: 20, bottom: 30, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 30, padding: 10, zIndex: 2 },
-  captureButtonOverlay: { position: 'absolute', alignSelf: 'center', bottom: 20, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 40, padding: 16, zIndex: 1 },
-  imagePreview: { width: 100, height: 100, borderRadius: 10, marginRight: 10 },
+  camera: { flex: 1, width: '100%', borderRadius: 16 },
+  galleryButton: { position: 'absolute', left: 20, bottom: 20, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 30, padding: 10, zIndex: 2 },
+  captureButtonOverlay: { position: 'absolute', alignSelf: 'center', bottom: 220, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 40, padding: 16, zIndex: 1 },
 });
