@@ -65,7 +65,7 @@ export default function CameraScreen() {
 
   return (
     <View style={styles.container}>
-      <Text className="text-white text-2xl font-semibold my-3">Toma o selecciona una o varias fotos</Text>
+      <Text className="text-white text-2xl my-3">Toma o selecciona una o varias fotos</Text>
       <View style={styles.cameraContainer}>
         {isFocused && (
           <CameraView

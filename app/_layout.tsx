@@ -41,6 +41,7 @@ export default function RootLayout() {
             <Stack.Screen name="observations/SpeciesDetails" options={{ title: 'Especie' }} />
             <Stack.Screen name="ObservationForm" options={{ title: 'Creación de Observación' }} />
             <Stack.Screen name="(auth)/login" options={{ title: 'Iniciar Sesión' }} />
+            <Stack.Screen name="(auth)/register" options={{ title: 'Registrar Usuario' }} />
             <Stack.Screen name="(auth)/forgot-password" options={{ title: 'Recuperar Contraseña' }} />
           </Stack>
           <StatusBar style="auto" />

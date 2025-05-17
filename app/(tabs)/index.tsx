@@ -72,7 +72,7 @@ const galeryData: Observation[] = [
     date: '24 Sep 2023',
     location: 'Parque Natural Nacional de los Nevados',
     coordinate: {
-      latitude: 4.8333,
+      latitude: 4.855,
       longitude: -75.3667
     }
   },
@@ -83,7 +83,7 @@ const galeryData: Observation[] = [
     date: '24 Sep 2023',
     location: 'Parque Natural Nacional de los Nevados',
     coordinate: {
-      latitude: 4.8333,
+      latitude: 4.7333,
       longitude: -75.3667
     }
   },
@@ -94,7 +94,7 @@ const galeryData: Observation[] = [
     date: '24 Sep 2023',
     location: 'Parque Natural Nacional de los Nevados',
     coordinate: {
-      latitude: 4.8333,
+      latitude: 4.9333,
       longitude: -75.3667
     }
   }
@@ -140,6 +140,5 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#121212',
   },
 });
