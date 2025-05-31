@@ -1,3 +1,4 @@
+import * as ImagePicker from 'expo-image-picker';
 import { router } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -23,6 +24,77 @@ const RegisterScreen = () => {
     const [description, setDescription] = useState('');
     const [profession, setProfession] = useState('');
     const [loading, setLoading] = useState(false);
+    const [avatar, setAvatar] = useState<string | null>(null);
+
+    const pickImage = async () => {
+        try {
+            // Solicitar permisos primero
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+            if (status !== 'granted') {
+                Alert.alert('Error', 'Se necesitan permisos para acceder a la galería');
+                return;
+            }
+
+            const result = await ImagePicker.launchImageLibraryAsync({
+                mediaTypes: ['images'],
+                allowsEditing: true,
+                aspect: [1, 1],
+                quality: 0.5,
+                base64: true,
+            });
+
+            if (!result.canceled) {
+                setAvatar(result.assets[0].uri);
+            }
+        } catch (error) {
+            console.error('Error al seleccionar imagen:', error);
+            Alert.alert('Error', 'No se pudo seleccionar la imagen');
+        }
+    };
+
+    const uploadImage = async (uri: string) => {
+        try {
+            console.log('Iniciando carga de imagen...');
+            console.log('URI de la imagen:', uri);
+
+            if (!uri.startsWith('file://') && !uri.startsWith('content://')) {
+                throw new Error('URI de imagen inválida');
+            }
+
+            const filename = uri.split('/').pop();
+            const fileExt = filename?.split('.').pop() || 'jpg';
+            const filePath = `avatars/${Date.now()}.${fileExt}`;
+
+            const formData = new FormData();
+            formData.append('file', {
+                uri,
+                name: filename,
+                type: `image/${fileExt}`,
+            } as any);
+
+            console.log('Subiendo imagen a Supabase...');
+            const { data, error: uploadError } = await supabase.storage
+                .from('biodiversity-files')
+                .upload(filePath, formData, {
+                    contentType: `image/${fileExt}`,
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+            if (uploadError) {
+                console.error('Error de Supabase:', uploadError);
+                throw uploadError;
+            }
+
+            console.log('Imagen subida exitosamente');
+            // Solo retorna la ruta interna
+            return filePath;
+        } catch (error: any) {
+            console.error('Error detallado al subir imagen:', error);
+            throw new Error(`Error al subir la imagen: ${error.message}`);
+        }
+    };
 
     const handleRegister = async () => {
         if (!email || !password || !name || !description || !profession) {
@@ -32,30 +104,49 @@ const RegisterScreen = () => {
 
         try {
             setLoading(true);
+            console.log('Iniciando proceso de registro...');
 
             // 1. Registrar usuario en Supabase Auth
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email,
                 password,
+                options: {
+                    data: {
+                        name,
+                        description,
+                        profession
+                    }
+                }
             });
 
-            if (authError) throw authError;
+            if (authError) {
+                console.error('Error en registro de auth:', authError);
+                throw authError;
+            }
 
-            if (authData.user) {
-                // 2. Crear perfil en la tabla de perfiles
+            // 2. Si el usuario ya está autenticado (no requiere verificación de email)
+            if (authData.session && authData.user) {
+                let avatarUrl = null;
+                if (avatar) {
+                    try {
+                        console.log('Subiendo imagen de perfil...');
+                        avatarUrl = await uploadImage(avatar);
+                        console.log('Ruta de la imagen:', avatarUrl);
+                    } catch (error: any) {
+                        console.error('Error al subir la imagen:', error);
+                        Alert.alert('Advertencia', 'No se pudo subir la imagen de perfil. Continuando con el registro...');
+                    }
+                }
+                // Actualizar el perfil con la URL del avatar
                 const { error: profileError } = await supabase
                     .from('profiles')
-                    .insert([
-                        {
-                            id: authData.user.id,
-                            name,
-                            description,
-                            profession,
-                            email
-                        }
-                    ]);
+                    .update({ avatar_url: avatarUrl })
+                    .eq('id', authData.user.id);
 
-                if (profileError) throw profileError;
+                if (profileError) {
+                    console.error('Error al actualizar perfil:', profileError);
+                    throw profileError;
+                }
 
                 Alert.alert(
                     'Registro Exitoso',
@@ -67,9 +158,22 @@ const RegisterScreen = () => {
                         }
                     ]
                 );
+            } else {
+                // Si requiere verificación de email, no se puede subir la imagen aún
+                Alert.alert(
+                    'Registro Exitoso',
+                    'Por favor, verifica tu correo electrónico para activar tu cuenta. Podrás subir tu foto de perfil después de iniciar sesión.',
+                    [
+                        {
+                            text: 'OK',
+                            onPress: () => router.replace('/login')
+                        }
+                    ]
+                );
             }
         } catch (error: any) {
-            Alert.alert('Error', error.message);
+            console.error('Error en el proceso de registro:', error);
+            Alert.alert('Error', error.message || 'Error al registrar usuario');
         } finally {
             setLoading(false);
         }
@@ -103,6 +207,23 @@ const RegisterScreen = () => {
                     <Text className="text-base text-gray-400 mb-8">
                         Únete a nuestra comunidad
                     </Text>
+
+                    <TouchableOpacity
+                        onPress={pickImage}
+                        className="w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden border-2 border-[#27AE60]"
+                    >
+                        {avatar ? (
+                            <Image
+                                source={{ uri: avatar }}
+                                className="w-full h-full"
+                                resizeMode="cover"
+                            />
+                        ) : (
+                            <View className="w-full h-full bg-[#1E1E1E] justify-center items-center">
+                                <Text className="text-[#27AE60] text-center">Agregar Foto</Text>
+                            </View>
+                        )}
+                    </TouchableOpacity>
 
                     <TextInput
                         className="w-full h-[55px] bg-[#1E1E1E] rounded-xl px-5 mb-4 text-base text-white border border-gray-700"
