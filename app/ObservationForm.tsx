@@ -2,7 +2,9 @@ import DateTimePicker from '@react-native-community/datetimepicker';
 import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import * as Location from 'expo-location';
 import { useEffect, useState } from "react";
-import { Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { createObservation, CreateObservationData } from '../lib/services/observations';
+import { supabase } from '../lib/supabase';
 
 // Definición del tipo de parámetros de la ruta
 type RootStackParamList = {
@@ -21,8 +23,13 @@ export default function ObservationForm() {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showTimePicker, setShowTimePicker] = useState(false);
     const [location, setLocation] = useState<Location.LocationObject | null>(null);
-    const [manualLocation, setManualLocation] = useState("");
+    const [latitude, setLatitude] = useState<string>("");
+    const [longitude, setLongitude] = useState<string>("");
     const [selectedState, setSelectedState] = useState<ObservationState>('vivo');
+    const [loading, setLoading] = useState(false);
+    const [uploadingImages, setUploadingImages] = useState(false);
+    const [validatedImageUrls, setValidatedImageUrls] = useState<string[]>([]);
+    const [imagesValidated, setImagesValidated] = useState(false);
 
     useEffect(() => {
         (async () => {
@@ -33,6 +40,8 @@ export default function ObservationForm() {
 
             let location = await Location.getCurrentPositionAsync({});
             setLocation(location);
+            setLatitude(location.coords.latitude.toString());
+            setLongitude(location.coords.longitude.toString());
         })();
     }, []);
 
@@ -61,24 +70,152 @@ export default function ObservationForm() {
         return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
     };
 
-    return (
-        <ScrollView contentContainerStyle={{ flexGrow: 1, alignItems: 'center', padding: 20 }}>
-            <ScrollView horizontal className="mb-6 w-full">
-                <View className="flex-row justify-center w-full">
-                    {imageUris.map((uri, idx) => (
-                        <Image key={idx} source={{ uri }} className="w-48 h-40 rounded-2xl mx-2" />
-                    ))}
-                </View>
-            </ScrollView>
+    const uploadImages = async () => {
+        try {
+            setUploadingImages(true);
+            const uploadedUrls: string[] = [];
 
-            <View className="w-full mb-5">
-                <Text className="text-gray-300 text-base mb-2 font-bold">Fecha y Hora de Captura</Text>
+            for (const uri of imageUris) {
+                if (!uri.startsWith('file://') && !uri.startsWith('content://')) {
+                    throw new Error('URI de imagen inválida');
+                }
+
+                const filename = uri.split('/').pop();
+                const fileExt = filename?.split('.').pop() || 'jpg';
+                const filePath = `observations/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+
+                const formData = new FormData();
+                formData.append('file', {
+                    uri,
+                    name: filename,
+                    type: `image/${fileExt}`,
+                } as any);
+
+                const { data, error: uploadError } = await supabase.storage
+                    .from('biodiversity-files')
+                    .upload(filePath, formData, {
+                        contentType: `image/${fileExt}`,
+                        cacheControl: '3600',
+                        upsert: false
+                    });
+
+                if (uploadError) {
+                    throw uploadError;
+                }
+
+                uploadedUrls.push(filePath);
+            }
+
+            setValidatedImageUrls(uploadedUrls);
+            setImagesValidated(true);
+            Alert.alert('Éxito', 'Las imágenes se han cargado correctamente');
+        } catch (error: any) {
+            console.error('Error al subir las imágenes:', error);
+            Alert.alert('Error', 'No se pudieron subir las imágenes. Por favor, inténtalo de nuevo.');
+            setImagesValidated(false);
+            setValidatedImageUrls([]);
+        } finally {
+            setUploadingImages(false);
+        }
+    };
+
+    const handleSubmit = async () => {
+        try {
+            if (!imagesValidated) {
+                Alert.alert('Error', 'Debes validar las imágenes antes de crear la observación');
+                return;
+            }
+
+            if (validatedImageUrls.length === 0) {
+                Alert.alert('Error', 'No hay imágenes validadas para la observación');
+                return;
+            }
+
+            setLoading(true);
+
+            // Validar latitud y longitud
+            const lat = parseFloat(latitude);
+            const lng = parseFloat(longitude);
+            if (isNaN(lat) || isNaN(lng)) {
+                Alert.alert('Error', 'Debes ingresar una latitud y longitud válidas');
+                setLoading(false);
+                return;
+            }
+
+            const observationData: CreateObservationData = {
+                date: date.toISOString().split('T')[0],
+                latitude: lat,
+                longitude: lng,
+                note: notes,
+                state: selectedState,
+                type_observation: 'avistamiento',
+                verification_status: false,
+                id_observer_user: (await supabase.auth.getUser()).data.user?.id || '',
+                images: validatedImageUrls
+            };
+
+            await createObservation(observationData);
+
+            Alert.alert(
+                'Éxito',
+                'Observación creada correctamente',
+                [
+                    {
+                        text: 'OK',
+                        onPress: () => navigation.goBack()
+                    }
+                ]
+            );
+        } catch (error: any) {
+            console.error('Error al crear la observación:', error);
+            Alert.alert(
+                'Error',
+                error.message || 'No se pudo crear la observación. Por favor, inténtalo de nuevo.'
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <ScrollView className="flex-1 bg-black p-4" contentContainerStyle={{ paddingBottom: 40 }}>
+            <View className="w-full mb-6">
+                <Text className="text-gray-300 text-base mb-2 font-bold">Imágenes</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="mb-2">
+                    <View className="flex-row gap-2">
+                        {imageUris.map((uri, index) => (
+                            <Image
+                                key={index}
+                                source={{ uri }}
+                                className="w-28 h-28 rounded-lg mr-2"
+                            />
+                        ))}
+                    </View>
+                </ScrollView>
                 <TouchableOpacity
-                    className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 mb-2"
-                    onPress={() => setShowDatePicker(true)}
-                    activeOpacity={0.7}
+                    className={`w-full py-3 rounded-lg ${uploadingImages ? 'bg-gray-500' : 'bg-[#0E9F6E]'}`}
+                    onPress={uploadImages}
+                    disabled={uploadingImages || imagesValidated}
                 >
-                    <Text className="text-gray-100 text-base">{formatDateTime(date)}</Text>
+                    <Text className="text-white text-center font-bold">
+                        {uploadingImages ? 'Subiendo imágenes...' :
+                            imagesValidated ? 'Imágenes validadas ✓' :
+                                'Validar imágenes'}
+                    </Text>
+                </TouchableOpacity>
+                {imagesValidated && (
+                    <Text className="text-emerald-500 text-sm mt-2">
+                        {validatedImageUrls.length} imagen(es) validada(s)
+                    </Text>
+                )}
+            </View>
+
+            <View className="w-full mb-6">
+                <Text className="text-gray-300 text-base mb-2 font-bold">Fecha y Hora de Captura</Text>
+                <TouchableOpacity onPress={() => setShowDatePicker(true)}>
+                    <Text className="bg-gray-900 text-white px-4 py-3 rounded-lg text-lg">
+                        {formatDateTime(date)}
+                    </Text>
                 </TouchableOpacity>
                 {showDatePicker && (
                     <DateTimePicker
@@ -98,21 +235,28 @@ export default function ObservationForm() {
                 )}
             </View>
 
-            <View className="w-full mb-5">
+            <View className="w-full mb-6">
                 <Text className="text-gray-300 text-base mb-2 font-bold">Ubicación</Text>
-                {location ? (
-                    <Text className="text-gray-400 text-sm mb-2">
-                        Lat: {location.coords.latitude.toFixed(6)}, Long: {location.coords.longitude.toFixed(6)}
-                    </Text>
-                ) : (
+                <View style={{ flexDirection: 'row', gap: 8 }}>
                     <TextInput
-                        className="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-gray-100"
-                        placeholder="Ingresa la ubicación manualmente..."
+                        className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-gray-100 mr-2"
+                        placeholder="Latitud"
                         placeholderTextColor="#9CA3AF"
-                        value={manualLocation}
-                        onChangeText={setManualLocation}
+                        value={latitude}
+                        onChangeText={setLatitude}
+                        editable={!location}
+                        keyboardType="numeric"
                     />
-                )}
+                    <TextInput
+                        className="flex-1 bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-gray-100"
+                        placeholder="Longitud"
+                        placeholderTextColor="#9CA3AF"
+                        value={longitude}
+                        onChangeText={setLongitude}
+                        editable={!location}
+                        keyboardType="numeric"
+                    />
+                </View>
             </View>
 
             <View className="w-full mb-5">
@@ -142,20 +286,16 @@ export default function ObservationForm() {
                 />
             </View>
 
-            <View className="w-full flex-row justify-between gap-4 mt-2">
-                <TouchableOpacity
-                    className="flex-1 py-3 rounded-lg bg-emerald-600 items-center"
-                    onPress={() => navigation.goBack()}
-                >
-                    <Text className="text-white font-semibold text-lg">GUARDAR</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                    className="flex-1 py-3 rounded-lg items-center" style={{ backgroundColor: '#ff6467' }}
-                    onPress={() => navigation.goBack()}
-                >
-                    <Text className="text-white font-semibold text-lg">CANCELAR</Text>
-                </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+                className={`w-full py-3 rounded-lg ${loading ? 'bg-gray-500' : 'bg-[#0E9F6E]'} ${!imagesValidated ? 'opacity-50' : ''}`}
+                onPress={handleSubmit}
+                disabled={loading || !imagesValidated}
+                style={{ marginBottom: 30 }}
+            >
+                <Text className="text-white text-center font-bold">
+                    {loading ? 'Creando observación...' : 'Crear Observación'}
+                </Text>
+            </TouchableOpacity>
         </ScrollView>
     );
 } 
