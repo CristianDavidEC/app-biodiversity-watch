@@ -3,122 +3,141 @@ import CardObservation from '@/components/observations/CardObservation';
 import ObservationsMap from '@/components/observations/MapView';
 import ObservationsFilters from '@/components/observations/ObservationsFilters';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
-import { FlatList, StyleSheet, TouchableOpacity, View } from 'react-native';
-
-
-interface Observation {
-  id: string;
-  image: string;
-  description: string;
-  date: string;
-  location: string;
-  coordinate: {
-    latitude: number;
-    longitude: number;
-  };
-}
-
-// Datos de ejemplo para las observaciones
-const galeryData: Observation[] = [
-  {
-    id: '1',
-    image: '../../assets/images/profile.png',
-    description: 'Abeja común',
-    date: '24 Sep 2023',
-    location: 'Parque Nacional Natural Tayrona',
-    coordinate: {
-      latitude: 11.3114,
-      longitude: -75.0772
-    }
-  },
-  {
-    id: '2',
-    image: '../../assets/images/profile.png',
-    description: 'Oso Pardo de Anteojos',
-    date: '24 Sep 2023',
-    location: 'Parque Nacional Natural Tayrona',
-    coordinate: {
-      latitude: 11.3114,
-      longitude: -75.0772
-    }
-  },
-  {
-    id: '3',
-    image: '../../assets/images/profile.png',
-    description: 'Ballenato de la Sierra Nevada',
-    date: '24 Sep 2023',
-    location: 'Parque Natural Nacional de los Nevados',
-    coordinate: {
-      latitude: 4.8333,
-      longitude: -75.3667
-    }
-  },
-  {
-    id: '4',
-    image: '../../assets/images/profile.png',
-    description: 'Frailejon del Ruiz',
-    date: '24 Sep 2023',
-    location: 'Parque Natural Nacional Sierra Nevada de Santa Marta',
-    coordinate: {
-      latitude: 10.8333,
-      longitude: -73.6667
-    }
-  },
-  {
-    id: '5',
-    image: '../../assets/images/profile.png',
-    description: 'Lobo de los Andes',
-    date: '24 Sep 2023',
-    location: 'Parque Natural Nacional de los Nevados',
-    coordinate: {
-      latitude: 4.855,
-      longitude: -75.3667
-    }
-  },
-  {
-    id: '6',
-    image: '../../assets/images/profile.png',
-    description: 'Pasto de Frailejon',
-    date: '24 Sep 2023',
-    location: 'Parque Natural Nacional de los Nevados',
-    coordinate: {
-      latitude: 4.7333,
-      longitude: -75.3667
-    }
-  },
-  {
-    id: '7',
-    image: '../../assets/images/profile.png',
-    description: 'Escarabajo de los Andes',
-    date: '24 Sep 2023',
-    location: 'Parque Natural Nacional de los Nevados',
-    coordinate: {
-      latitude: 4.9333,
-      longitude: -75.3667
-    }
-  }
-];
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { getAllObservations } from '../../lib/services/observations';
+import { getSignedImageUrl } from '../../lib/utils/getSignedImageUrl';
 
 export default function HomeScreen() {
   const [showMap, setShowMap] = useState(false);
+  const [observations, setObservations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
+  const [refreshing, setRefreshing] = useState(false);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [filters, setFilters] = useState({
+    search: '',
+    startDate: null as Date | null,
+    endDate: null as Date | null,
+    location: ''
+  });
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const PAGE_SIZE = 5;
+
+  const fetchObservations = async (reset = false) => {
+    if (reset && refreshing) return;
+    if (!reset && isLoadingMore) return;
+    if (reset) {
+      setRefreshing(true);
+    } else if (!reset) {
+      setIsLoadingMore(true);
+    }
+    try {
+      const currentPage = reset ? 1 : page;
+      const response = await getAllObservations(currentPage);
+      const data = response.data || [];
+      const mapped = await Promise.all(data.map(async (obs: any) => {
+        let imageUrl = '';
+        if (obs.images && obs.images.length > 0) {
+          imageUrl = await getSignedImageUrl(obs.images[0]);
+        }
+        return {
+          id: obs.id_observation || obs.id,
+          image: imageUrl,
+          description: obs.note || 'Sin descripción',
+          date: obs.date || '',
+          location: '',
+          coordinate: {
+            latitude: obs.latitude,
+            longitude: obs.longitude
+          }
+        };
+      }));
+      if (reset) {
+        setObservations(mapped);
+        setPage(2);
+      } else {
+        setObservations(prev => {
+          const ids = new Set(prev.map(item => item.id));
+          const filtered = mapped.filter(item => !ids.has(item.id));
+          return [...prev, ...filtered];
+        });
+        setPage(prev => prev + 1);
+      }
+      setHasMore(data.length === PAGE_SIZE);
+    } catch (err: any) {
+      setError('Error al cargar las observaciones.');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+      setIsLoadingMore(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchObservations(true);
+  }, []);
+
+  const onRefresh = () => {
+    fetchObservations(true);
+  };
+
+  const onEndReached = () => {
+    if (!loading && !refreshing && !isLoadingMore && hasMore) {
+      fetchObservations(false);
+    }
+  };
 
   const toggleView = () => {
     setShowMap(!showMap);
   };
 
+  // Filtrar observaciones según los filtros
+  const filteredObservations = observations.filter((obs) => {
+    // Filtro por búsqueda (nombre/descripción)
+    const searchMatch = filters.search
+      ? (obs.description?.toLowerCase().includes(filters.search.toLowerCase()) || '')
+      : true;
+    // Filtro por ubicación (si tuvieras un campo location real)
+    const locationMatch = filters.location
+      ? (obs.location?.toLowerCase().includes(filters.location.toLowerCase()) || '')
+      : true;
+    // Filtro por fecha
+    let dateMatch = true;
+    if (filters.startDate) {
+      dateMatch = dateMatch && new Date(obs.date) >= filters.startDate;
+    }
+    if (filters.endDate) {
+      dateMatch = dateMatch && new Date(obs.date) <= filters.endDate;
+    }
+    return searchMatch && locationMatch && dateMatch;
+  });
+
+  if (loading) {
+    return <ActivityIndicator size="large" color="#0E9F6E" style={{ marginTop: 40 }} />;
+  }
+  if (error) {
+    return <View style={{ marginTop: 40 }}><Text style={{ color: 'red' }}>{error}</Text></View>;
+  }
+
   return (
     <View style={styles.container}>
-      <ObservationsFilters />
+      <ObservationsFilters onFilterChange={setFilters} />
 
       {showMap ? (
-        <ObservationsMap observations={galeryData} />
+        <ObservationsMap observations={filteredObservations} />
       ) : (
         <FlatList
-          data={galeryData}
+          data={filteredObservations}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => <CardObservation {...item} />}
           numColumns={1}
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          onEndReached={onEndReached}
+          onEndReachedThreshold={0.5}
+          ListFooterComponent={isLoadingMore ? <ActivityIndicator size="large" /> : null}
         />
       )}
 

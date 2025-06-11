@@ -1,10 +1,12 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Dimensions, Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { getSignedImageUrl } from '../../lib/utils/getSignedImageUrl';
 
 const { height } = Dimensions.get('window');
+const PLACEHOLDER_IMAGE = require('../../assets/images/profile.png');
 
 interface Observation {
     id: string;
@@ -16,33 +18,106 @@ interface Observation {
         latitude: number;
         longitude: number;
     };
+    images?: string[];
 }
 
 interface MapViewProps {
     observations: Observation[];
 }
 
+function ObservationImage({ image, images }: { image: string; images?: string[] }) {
+    const [signedUrl, setSignedUrl] = useState<string | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        let isMounted = true;
+        const fetchUrl = async () => {
+            setLoading(true);
+            let url = '';
+            if (images && images.length > 0) {
+                url = await getSignedImageUrl(images[0]);
+            } else if (image) {
+                url = image;
+            }
+            if (isMounted) setSignedUrl(url);
+            setLoading(false);
+        };
+        fetchUrl();
+        return () => { isMounted = false; };
+    }, [image, images]);
+
+    if (loading) {
+        return (
+            <View style={[styles.observationImage, { justifyContent: 'center', alignItems: 'center' }]}>
+                <ActivityIndicator size="small" color="#0E9F6E" />
+            </View>
+        );
+    }
+    return (
+        <Image
+            source={signedUrl ? { uri: signedUrl } : PLACEHOLDER_IMAGE}
+            style={styles.observationImage}
+        />
+    );
+}
+
+function groupObservationsByProximity(observations: Observation[], radiusMeters = 50) {
+    const groups: Observation[][] = [];
+    const toRadians = (deg: number) => deg * (Math.PI / 180);
+    function distance(lat1: number, lon1: number, lat2: number, lon2: number) {
+        const R = 6371000;
+        const dLat = toRadians(lat2 - lat1);
+        const dLon = toRadians(lon2 - lon1);
+        const a =
+            Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(toRadians(lat1)) *
+            Math.cos(toRadians(lat2)) *
+            Math.sin(dLon / 2) *
+            Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+    observations.forEach((obs) => {
+        let foundGroup = null;
+        for (const group of groups) {
+            const ref = group[0];
+            if (
+                distance(
+                    obs.coordinate.latitude,
+                    obs.coordinate.longitude,
+                    ref.coordinate.latitude,
+                    ref.coordinate.longitude
+                ) < radiusMeters
+            ) {
+                foundGroup = group;
+                break;
+            }
+        }
+        if (foundGroup) {
+            foundGroup.push(obs);
+        } else {
+            groups.push([obs]);
+        }
+    });
+    return groups;
+}
+
 export default function ObservationsMap({ observations }: MapViewProps) {
     const router = useRouter();
     const [selectedObservation, setSelectedObservation] = useState<Observation | null>(null);
+    const [selectedGroup, setSelectedGroup] = useState<Observation[] | null>(null);
 
-    const handleMarkerPress = (observation: Observation) => {
-        setSelectedObservation(observation);
+    const handleMarkerPress = (group: Observation[]) => {
+        setSelectedObservation(group[0]);
+        setSelectedGroup(group);
     };
 
     const handleObservationPress = (observationId: string) => {
         router.push(`/observations/${observationId}`);
     };
 
-    // Agrupar observaciones por ubicación
-    const groupedObservations = observations.reduce((acc, observation) => {
-        const key = `${observation.coordinate.latitude}-${observation.coordinate.longitude}`;
-        if (!acc[key]) {
-            acc[key] = [];
-        }
-        acc[key].push(observation);
-        return acc;
-    }, {} as Record<string, Observation[]>);
+    // Agrupar observaciones por proximidad (50 metros)
+    const grouped = groupObservationsByProximity(observations, 50);
 
     return (
         <View style={styles.container}>
@@ -56,20 +131,21 @@ export default function ObservationsMap({ observations }: MapViewProps) {
                     longitudeDelta: 10,
                 }}
             >
-                {Object.entries(groupedObservations).map(([key, observations]) => {
-                    const firstObservation = observations[0];
+                {grouped.map((group, idx) => {
+                    // Usar el primer elemento como referencia para el marcador
+                    const firstObservation = group[0];
                     return (
                         <Marker
-                            key={key}
+                            key={idx}
                             coordinate={firstObservation.coordinate}
-                            title={`${observations.length} observaciones`}
-                            onPress={() => handleMarkerPress(firstObservation)}
+                            title={`${group.length} observaciones`}
+                            onPress={() => handleMarkerPress(group)}
                         >
                             <View style={styles.markerContainer}>
                                 <Ionicons name="location" size={30} color="#27AE60" />
-                                {observations.length > 1 && (
+                                {group.length > 1 && (
                                     <View style={styles.markerBadge}>
-                                        <Text style={styles.markerBadgeText}>{observations.length}</Text>
+                                        <Text style={styles.markerBadgeText}>{group.length}</Text>
                                     </View>
                                 )}
                             </View>
@@ -78,14 +154,14 @@ export default function ObservationsMap({ observations }: MapViewProps) {
                 })}
             </MapView>
 
-            {selectedObservation && (
+            {selectedObservation && selectedGroup && (
                 <View style={styles.infoContainer}>
                     <ScrollView
                         style={styles.scrollView}
                         showsVerticalScrollIndicator={false}
                         contentContainerStyle={styles.scrollViewContent}
                     >
-                        {groupedObservations[`${selectedObservation.coordinate.latitude}-${selectedObservation.coordinate.longitude}`].map((observation) => (
+                        {selectedGroup.map((observation) => (
                             <TouchableOpacity
                                 key={observation.id}
                                 style={styles.observationItem}
@@ -94,20 +170,17 @@ export default function ObservationsMap({ observations }: MapViewProps) {
                                 <View style={styles.observationContent}>
                                     <View style={styles.observationTextContainer}>
                                         <Text style={styles.observationTitle}>{observation.description}</Text>
-                                        <Text style={styles.observationDate}>{observation.date}</Text>
+                                        <Text className={"text-xs text-gray-400"}>{observation.date}</Text>
                                         <Text style={styles.observationLocation}>{observation.location}</Text>
                                     </View>
-                                    <Image
-                                        source={require('../../assets/images/profile.png')}
-                                        style={styles.observationImage}
-                                    />
+                                    <ObservationImage image={observation.image} images={observation.images} />
                                 </View>
                             </TouchableOpacity>
                         ))}
                     </ScrollView>
                     <TouchableOpacity
                         style={styles.closeButton}
-                        onPress={() => setSelectedObservation(null)}
+                        onPress={() => { setSelectedObservation(null); setSelectedGroup(null); }}
                     >
                         <Text style={styles.closeButtonText}>Cerrar</Text>
                     </TouchableOpacity>
@@ -160,6 +233,7 @@ const styles = StyleSheet.create({
     },
     scrollView: {
         flex: 1,
+        maxHeight: 180,
     },
     scrollViewContent: {
         padding: 15,

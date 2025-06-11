@@ -2,7 +2,6 @@ import { Ionicons } from '@expo/vector-icons';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useState } from 'react';
 import {
-    Alert,
     Keyboard,
     Platform,
     Text,
@@ -12,7 +11,16 @@ import {
     View
 } from 'react-native';
 
-const ObservationsFilters = () => {
+interface ObservationsFiltersProps {
+    onFilterChange?: (filters: {
+        search: string;
+        startDate: Date | null;
+        endDate: Date | null;
+        location: string;
+    }) => void;
+}
+
+const ObservationsFilters = ({ onFilterChange }: ObservationsFiltersProps) => {
     const [showFilters, setShowFilters] = useState(false);
     const [startDate, setStartDate] = useState<Date | null>(null);
     const [endDate, setEndDate] = useState<Date | null>(null);
@@ -22,18 +30,14 @@ const ObservationsFilters = () => {
     const [searchQuery, setSearchQuery] = useState('');
 
     const handleSearch = () => {
-        const filters = {
-            search: searchQuery,
-            startDate: startDate?.toDateString() || 'No especificada',
-            endDate: endDate?.toDateString() || 'No especificada',
-            location: location || 'No especificada'
-        };
-
-        console.log('Buscando con filtros:', filters);
-        Alert.alert(
-            "Búsqueda realizada",
-            `Búsqueda: ${searchQuery}\nFecha inicial: ${filters.startDate}\nFecha final: ${filters.endDate}\nUbicación: ${filters.location}`
-        );
+        if (onFilterChange) {
+            onFilterChange({
+                search: searchQuery,
+                startDate,
+                endDate,
+                location
+            });
+        }
     };
 
     const onChangeStartDate = (event: any, selectedDate: any) => {
