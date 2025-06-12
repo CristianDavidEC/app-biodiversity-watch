@@ -3,6 +3,7 @@
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
 
 ## Get started
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/CristianDavidEC/app-biodiversity-watch)
 
 1. Install dependencies
 
