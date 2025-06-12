@@ -35,12 +35,13 @@ export default function HomeScreen() {
     }
     try {
       const currentPage = reset ? 1 : page;
-      const response = await getAllObservations(currentPage);
+      const specieCommonName = filters.search ? filters.search : undefined;
+      const response = await getAllObservations(currentPage, specieCommonName);
       const data = response.data || [];
       const mapped = await Promise.all(data.map(async (obs: any) => {
         let imageUrl = '';
         if (obs.images && obs.images.length > 0) {
-          imageUrl = await getSignedImageUrl(obs.images[0]);
+          imageUrl = (await getSignedImageUrl(obs.images[0])) || '';
         }
         return {
           id: obs.id_observation || obs.id,
@@ -95,28 +96,6 @@ export default function HomeScreen() {
     setShowMap(!showMap);
   };
 
-  // Filtrar observaciones según los filtros
-  const filteredObservations = observations.filter((obs) => {
-    // Filtro por búsqueda (nombre/descripción)
-    const searchMatch = filters.search
-      ? (obs.description?.toLowerCase().includes(filters.search.toLowerCase()) || '')
-      : true;
-    // Filtro por ubicación (si tuvieras un campo location real)
-    const locationMatch = filters.location
-      ? (obs.location?.toLowerCase().includes(filters.location.toLowerCase()) || '')
-      : true;
-    // Filtro por fecha
-    let dateMatch = true;
-    if (filters.startDate) {
-      dateMatch = dateMatch && new Date(obs.date) >= filters.startDate;
-    }
-    if (filters.endDate) {
-      dateMatch = dateMatch && new Date(obs.date) <= filters.endDate;
-    }
-    return searchMatch && locationMatch && dateMatch;
-  });
-
-
   if (loading) {
     return <ActivityIndicator size="large" color="#0E9F6E" style={{ marginTop: 40 }} />;
   }
@@ -126,13 +105,16 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <ObservationsFilters onFilterChange={setFilters} />
+      <ObservationsFilters onFilterChange={(newFilters) => {
+        setFilters(newFilters);
+        fetchObservations(true);
+      }} />
 
       {showMap ? (
-        <ObservationsMap observations={filteredObservations} />
+        <ObservationsMap observations={observations} />
       ) : (
         <FlatList
-          data={filteredObservations}
+          data={observations}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => <CardObservation {...item} />}
           numColumns={1}

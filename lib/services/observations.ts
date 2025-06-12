@@ -89,13 +89,17 @@ export const getObservationsByUser = async (userId: string, page = 1) => {
     }
 };
 
-export const getAllObservations = async (page = 1) => {
+export const getAllObservations = async (page = 1, specieCommonName?: string) => {
     try {
         const token = await getAuthToken();
         if (!token) {
             throw new Error('No hay token de autenticación');
         }
-        const response = await fetch(`${API_URL}/api/observations?page=${page}`, {
+        let url = `${API_URL}/api/observations?page=${page}`;
+        if (specieCommonName) {
+            url += `&specieCommonName=${encodeURIComponent(specieCommonName)}`;
+        }
+        const response = await fetch(url, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${token}`,

@@ -261,14 +261,14 @@
 							}
 						},
 						"url": {
-							"raw": "{{local_url}}/api/observations/3f6769fd-3620-4c69-a2ca-b562b3676173",
+							"raw": "{{local_url}}/api/observations/7bcf9f85-e1a5-4db5-ad59-b68423e10845",
 							"host": [
 								"{{local_url}}"
 							],
 							"path": [
 								"api",
 								"observations",
-								"3f6769fd-3620-4c69-a2ca-b562b3676173"
+								"7bcf9f85-e1a5-4db5-ad59-b68423e10845"
 							]
 						}
 					},
@@ -298,9 +298,9 @@
 							}
 						},
 						"url": {
-							"raw": "{{local_url}}/api/observations?page=1",
+							"raw": "{{dev_url}}/api/observations?page=1&specieCommonName=oso",
 							"host": [
-								"{{local_url}}"
+								"{{dev_url}}"
 							],
 							"path": [
 								"api",
@@ -310,6 +310,10 @@
 								{
 									"key": "page",
 									"value": "1"
+								},
+								{
+									"key": "specieCommonName",
+									"value": "oso"
 								}
 							]
 						}
@@ -398,7 +402,7 @@
 								{
 									"key": "file",
 									"type": "file",
-									"src": "/C:/Users/Crist/Downloads/oso.jpg"
+									"src": "/C:/Users/Crist/Downloads/hq_283656564.jpg"
 								}
 							]
 						},
@@ -430,10 +434,7 @@
 								{
 									"key": "file",
 									"type": "file",
-									"src": [
-										"/C:/Users/Crist/Downloads/images (2).jpg",
-										"/C:/Users/Crist/Downloads/images.jpg"
-									]
+									"src": "/C:/Users/Crist/Downloads/oso.jpg"
 								}
 							]
 						},
@@ -538,6 +539,49 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Descaga iamgenes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://api.inaturalist.org/v1/observations?taxon_name=Tremarctos%20ornatus&quality_grade=research&per_page=200&order=desc&order_by=created_at",
+							"protocol": "https",
+							"host": [
+								"api",
+								"inaturalist",
+								"org"
+							],
+							"path": [
+								"v1",
+								"observations"
+							],
+							"query": [
+								{
+									"key": "taxon_name",
+									"value": "Tremarctos%20ornatus"
+								},
+								{
+									"key": "quality_grade",
+									"value": "research"
+								},
+								{
+									"key": "per_page",
+									"value": "200"
+								},
+								{
+									"key": "order",
+									"value": "desc"
+								},
+								{
+									"key": "order_by",
+									"value": "created_at"
+								}
+							]
+						}
+					},
+					"response": []
 				}
 			]
 		}
@@ -578,7 +622,7 @@
 		},
 		{
 			"key": "access_token",
-			"value": "eyJhbGciOiJIUzI1NiIsImtpZCI6IlBjZDdUbnRCUXF5QVVBYjciLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2ZtemN3YWphbHJhcmxnZ3Jrdm9nLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJhYTgxM2EzOS00NWUxLTRiNjgtOGZkNy03MzU4ZjdjNmMxM2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzQ5NjIxMDE1LCJpYXQiOjE3NDk2MTc0MTUsImVtYWlsIjoiY3Jpc3RpYW5lc2NvYmFyY2RlY0BnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImRlc2NyaXB0aW9uIjoiVG9tbyBmb3RvcyBhIHRvZG8iLCJlbWFpbCI6ImNyaXN0aWFuZXNjb2JhcmNkZWNAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJQZXBlIFBlcmV6IiwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJwcm9mZXNzaW9uIjoiSW5nIFNvZnR3YXJlICIsInN1YiI6ImFhODEzYTM5LTQ1ZTEtNGI2OC04ZmQ3LTczNThmN2M2YzEzYyJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzQ5NjE3NDE1fV0sInNlc3Npb25faWQiOiI0MWExYjRkYi01N2NmLTRlNzAtYmFmMy02NmVhZTYwOGEwMzgiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.2EHHh4nqVQk-cHDlyyIU_98T9oik9kREz7HESPRLOtE",
+			"value": "eyJhbGciOiJIUzI1NiIsImtpZCI6IlBjZDdUbnRCUXF5QVVBYjciLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2ZtemN3YWphbHJhcmxnZ3Jrdm9nLnN1cGFiYXNlLmNvL2F1dGgvdjEiLCJzdWIiOiJhYTgxM2EzOS00NWUxLTRiNjgtOGZkNy03MzU4ZjdjNmMxM2MiLCJhdWQiOiJhdXRoZW50aWNhdGVkIiwiZXhwIjoxNzQ5NzQ3NTQ0LCJpYXQiOjE3NDk3NDM5NDQsImVtYWlsIjoiY3Jpc3RpYW5lc2NvYmFyY2RlY0BnbWFpbC5jb20iLCJwaG9uZSI6IiIsImFwcF9tZXRhZGF0YSI6eyJwcm92aWRlciI6ImVtYWlsIiwicHJvdmlkZXJzIjpbImVtYWlsIl19LCJ1c2VyX21ldGFkYXRhIjp7ImRlc2NyaXB0aW9uIjoiVG9tbyBmb3RvcyBhIHRvZG8iLCJlbWFpbCI6ImNyaXN0aWFuZXNjb2JhcmNkZWNAZ21haWwuY29tIiwiZW1haWxfdmVyaWZpZWQiOnRydWUsIm5hbWUiOiJQZXBlIFBlcmV6IiwicGhvbmVfdmVyaWZpZWQiOmZhbHNlLCJwcm9mZXNzaW9uIjoiSW5nIFNvZnR3YXJlICIsInN1YiI6ImFhODEzYTM5LTQ1ZTEtNGI2OC04ZmQ3LTczNThmN2M2YzEzYyJ9LCJyb2xlIjoiYXV0aGVudGljYXRlZCIsImFhbCI6ImFhbDEiLCJhbXIiOlt7Im1ldGhvZCI6InBhc3N3b3JkIiwidGltZXN0YW1wIjoxNzQ5NzQzOTQ0fV0sInNlc3Npb25faWQiOiJiYTA2YTA4MS0yMjA5LTRkZmUtYmM0MC03M2EzNTkyOTg3YTEiLCJpc19hbm9ueW1vdXMiOmZhbHNlfQ.6It7EAbBw1Ln2SOFa-iRfDC81cJ1pVkXUhtuVj_vSMI",
 			"type": "string"
 		},
 		{
