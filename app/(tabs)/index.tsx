@@ -51,7 +51,9 @@ export default function HomeScreen() {
           coordinate: {
             latitude: obs.latitude,
             longitude: obs.longitude
-          }
+          },
+          specie_common_name: obs.specie_common_name || '',
+          specie_scientific_name: obs.specie_scientific_name || ''
         };
       }));
       if (reset) {
@@ -113,6 +115,7 @@ export default function HomeScreen() {
     }
     return searchMatch && locationMatch && dateMatch;
   });
+
 
   if (loading) {
     return <ActivityIndicator size="large" color="#0E9F6E" style={{ marginTop: 40 }} />;

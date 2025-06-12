@@ -1,1 +1,2 @@
-export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://back-biodiversity-watch-production.up.railway.app'; 
+export const API_URL = process.env.EXPO_PUBLIC_API_URL || 'https://back-biodiversity-watch-production.up.railway.app';
+export const IA_API_URL = process.env.EXPO_PUBLIC_IA_API_URL || 'https://ia-model-production.up.railway.app';

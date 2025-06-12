@@ -9,6 +9,12 @@ type GalleryItemProps = {
     date: string;
     id: string;
     location: string;
+    specie_common_name?: string;
+    specie_scientific_name?: string;
+    coordinate?: {
+        latitude: number;
+        longitude: number;
+    };
 }
 
 export default function CardObservation(props: GalleryItemProps) {
@@ -23,6 +29,12 @@ export default function CardObservation(props: GalleryItemProps) {
                 />
                 <Text className='text-xs text-gray-500'>{props.date}</Text>
                 <Text className='text-lg text-white'>{props.description}</Text>
+                {props.specie_common_name && (
+                    <Text className='text-base text-emerald-400 font-bold mt-1'>{props.specie_common_name}</Text>
+                )}
+                {props.specie_scientific_name && (
+                    <Text className='text-sm text-gray-300 italic'>{props.specie_scientific_name}</Text>
+                )}
                 <Text className='text-xs text-gray-500'>{props.location}</Text>
             </Pressable>
         </Link>

@@ -3,6 +3,7 @@ import { RouteProp, useNavigation, useRoute } from "@react-navigation/native";
 import * as Location from 'expo-location';
 import { useEffect, useState } from "react";
 import { Alert, Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { analyzeImagesWithIA } from '../lib/services/ia';
 import { createObservation, CreateObservationData } from '../lib/services/observations';
 import { supabase } from '../lib/supabase';
 
@@ -12,6 +13,12 @@ type RootStackParamList = {
 };
 
 type ObservationState = 'vivo' | 'muerto' | 'cautiverio' | 'herido' | 'enfermo';
+
+interface IAResponse {
+    especie: string;
+    indice: number;
+    probabilidades: number[][];
+}
 
 export default function ObservationForm() {
     const route = useRoute<RouteProp<RootStackParamList, 'ObservationForm'>>();
@@ -30,6 +37,9 @@ export default function ObservationForm() {
     const [uploadingImages, setUploadingImages] = useState(false);
     const [validatedImageUrls, setValidatedImageUrls] = useState<string[]>([]);
     const [imagesValidated, setImagesValidated] = useState(false);
+    const [iaResult, setIaResult] = useState<IAResponse | null>(null);
+    const [analyzingImages, setAnalyzingImages] = useState(false);
+    const [error, setError] = useState('');
 
     useEffect(() => {
         (async () => {
@@ -73,8 +83,15 @@ export default function ObservationForm() {
     const uploadImages = async () => {
         try {
             setUploadingImages(true);
-            const uploadedUrls: string[] = [];
+            setAnalyzingImages(true);
 
+            // Analizar todas las imágenes con IA (devuelve un solo objeto)
+            const result = await analyzeImagesWithIA(imageUris);
+            setIaResult(result);
+            setAnalyzingImages(false);
+
+            // Subir las imágenes al bucket
+            const uploadedUrls: string[] = [];
             for (const uri of imageUris) {
                 if (!uri.startsWith('file://') && !uri.startsWith('content://')) {
                     throw new Error('URI de imagen inválida');
@@ -108,70 +125,68 @@ export default function ObservationForm() {
 
             setValidatedImageUrls(uploadedUrls);
             setImagesValidated(true);
-            Alert.alert('Éxito', 'Las imágenes se han cargado correctamente');
+            Alert.alert('Éxito', 'Las imágenes se han analizado y cargado correctamente');
         } catch (error: any) {
-            console.error('Error al subir las imágenes:', error);
-            Alert.alert('Error', 'No se pudieron subir las imágenes. Por favor, inténtalo de nuevo.');
+            console.error('Error al procesar las imágenes:', error);
+            Alert.alert('Error', 'No se pudieron procesar las imágenes. Por favor, inténtalo de nuevo.');
             setImagesValidated(false);
             setValidatedImageUrls([]);
+            setIaResult(null);
         } finally {
             setUploadingImages(false);
+            setAnalyzingImages(false);
         }
     };
 
     const handleSubmit = async () => {
         try {
-            if (!imagesValidated) {
-                Alert.alert('Error', 'Debes validar las imágenes antes de crear la observación');
-                return;
-            }
-
-            if (validatedImageUrls.length === 0) {
-                Alert.alert('Error', 'No hay imágenes validadas para la observación');
-                return;
-            }
-
             setLoading(true);
+            setError('');
 
-            // Validar latitud y longitud
-            const lat = parseFloat(latitude);
-            const lng = parseFloat(longitude);
-            if (isNaN(lat) || isNaN(lng)) {
-                Alert.alert('Error', 'Debes ingresar una latitud y longitud válidas');
-                setLoading(false);
+            // Validar campos requeridos
+            if (!date || !latitude || !longitude || !selectedState || !notes) {
+                setError('Por favor complete todos los campos requeridos');
                 return;
             }
 
+            // Preparar datos de la observación
             const observationData: CreateObservationData = {
-                date: date.toISOString().split('T')[0],
-                latitude: lat,
-                longitude: lng,
+                date: date.toISOString().split('T')[0], // Formato YYYY-MM-DD
+                latitude: parseFloat(latitude),
+                longitude: parseFloat(longitude),
                 note: notes,
                 state: selectedState,
                 type_observation: 'avistamiento',
                 verification_status: false,
                 id_observer_user: (await supabase.auth.getUser()).data.user?.id || '',
-                images: validatedImageUrls
+                images: validatedImageUrls,
+                ...(iaResult && {
+                    similarity_percentage: iaResult.probabilidades[0][iaResult.indice] * 100,
+                    specie_scientific_name: iaResult.especie.replace(/_/g, ' '),
+                })
             };
 
+            // Crear la observación
             await createObservation(observationData);
 
-            Alert.alert(
-                'Éxito',
-                'Observación creada correctamente',
-                [
-                    {
-                        text: 'OK',
-                        onPress: () => navigation.goBack()
-                    }
-                ]
-            );
+            // Limpiar el formulario
+            setDate(new Date());
+            setLatitude('');
+            setLongitude('');
+            setNotes('');
+            setSelectedState('vivo');
+            setImagesValidated(false);
+            setValidatedImageUrls([]);
+            setIaResult(null);
+
+            // Mostrar mensaje de éxito
+            Alert.alert('Éxito', 'Observación creada correctamente');
+
+            // Navegar de vuelta a la pantalla anterior
+            navigation.goBack();
         } catch (error: any) {
             console.error('Error al crear la observación:', error);
-            Alert.alert(
-                'Error',
-                error.message || 'No se pudo crear la observación. Por favor, inténtalo de nuevo.'
-            );
+            setError('Error al crear la observación. Por favor intente nuevamente.');
         } finally {
             setLoading(false);
         }
@@ -198,15 +213,25 @@ export default function ObservationForm() {
                     disabled={uploadingImages || imagesValidated}
                 >
                     <Text className="text-white text-center font-bold">
-                        {uploadingImages ? 'Subiendo imágenes...' :
-                            imagesValidated ? 'Imágenes validadas ✓' :
-                                'Validar imágenes'}
+                        {analyzingImages ? 'Analizando imágenes con IA...' :
+                            uploadingImages ? 'Subiendo imágenes...' :
+                                imagesValidated ? 'Imágenes validadas ✓' :
+                                    'Validar imágenes'}
                     </Text>
                 </TouchableOpacity>
-                {imagesValidated && (
-                    <Text className="text-emerald-500 text-sm mt-2">
-                        {validatedImageUrls.length} imagen(es) validada(s)
-                    </Text>
+                {imagesValidated && iaResult && (
+                    <View className="mt-2 p-3 bg-gray-800 rounded-lg">
+                        <Text className="text-emerald-500 text-sm mt-2">
+                            {validatedImageUrls.length} imagen(es) validada(s)
+                        </Text>
+                        <Text className="text-white font-bold">Resultado IA</Text>
+                        <Text className="text-emerald-400">
+                            Especie detectada: {iaResult.especie.replace(/_/g, ' ')}
+                        </Text>
+                        <Text className="text-emerald-400">
+                            Probabilidad: {(iaResult.probabilidades[0][iaResult.indice] * 100).toFixed(2)}%
+                        </Text>
+                    </View>
                 )}
             </View>
 
