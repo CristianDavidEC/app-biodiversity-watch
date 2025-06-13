@@ -1,51 +1,115 @@
-# Welcome to your Expo app 👋
+# Biodiversity Watch App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Aplicación móvil para el monitoreo y registro de biodiversidad.
 
-## Get started
-[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/CristianDavidEC/app-biodiversity-watch)
+## Requisitos Previos
 
-1. Install dependencies
+- Node.js (versión 18 o superior)
+- npm o yarn
+- Expo CLI
+- Cuenta de Expo
+- Cuenta de Supabase
+- Dispositivo móvil con Expo Go instalado (Android/iOS)
+
+## Instalación
+
+1. **Clonar el repositorio**
+
+   ```bash
+   git clone https://github.com/CristianDavidEC/app-biodiversity-watch.git
+   cd biodiversity-watch-app
+   ```
+
+2. **Instalar dependencias**
 
    ```bash
    npm install
+   # o
+   yarn install
    ```
 
-2. Start the app
+3. **Configuración de variables de entorno**
+   - Crear un archivo `.env` en la raíz del proyecto
+   - Agregar las siguientes variables:
+     ```
+     SUPABASE_URL=tu_url_de_supabase
+     SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
+     ```
+
+## Ejecución del Proyecto
+
+1. **Iniciar el servidor de desarrollo**
 
    ```bash
-   npx expo start
+   npm start
+   # o
+   yarn start
    ```
 
-In the output, you'll find options to open the app in a
+2. **Conectar dispositivo móvil**
+   - Instalar la aplicación Expo Go en tu dispositivo móvil
+   - Asegurarte de que tu teléfono y computadora estén en la misma red WiFi
+   - Escanear el código QR que aparece en la terminal con:
+     - Android: Usar la app Expo Go
+     - iOS: Usar la cámara del teléfono
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Estructura del Proyecto
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+biodiversity-watch-app/
+├── app/                 # Páginas y rutas de la aplicación
+├── assets/             # Recursos estáticos (imágenes, fuentes)
+├── components/         # Componentes reutilizables
+├── constants/          # Constantes y configuraciones
+├── hooks/             # Custom hooks
+├── lib/               # Utilidades y configuraciones
+├── providers/         # Proveedores de contexto
+└── scripts/           # Scripts de utilidad
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Características Principales
 
-## Learn more
+- Registro de avistamientos de especies
+- Geolocalización de avistamientos
+- Captura de fotos
+- Mapa interactivo
+- Autenticación de usuarios
+- Sincronización con base de datos Supabase
 
-To learn more about developing your project with Expo, look at the following resources:
+## Comandos Útiles
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+- `npm start` - Inicia el servidor de desarrollo
+- `npm run android` - Inicia la aplicación en Android
+- `npm run ios` - Inicia la aplicación en iOS
+- `npm run web` - Inicia la aplicación en modo web
+- `npm run lint` - Ejecuta el linter
+- `npm run reset-project` - Resetea el proyecto a su estado inicial
 
-## Join the community
+## Solución de Problemas
 
-Join our community of developers creating universal apps.
+1. **Error de conexión**
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+   - Verificar que el dispositivo y la computadora estén en la misma red
+   - Asegurarse de que el firewall no esté bloqueando la conexión
+   - Reiniciar el servidor de desarrollo
+
+2. **Errores de dependencias**
+
+   - Eliminar la carpeta `node_modules` y el archivo `package-lock.json`
+   - Ejecutar `npm install` nuevamente
+
+3. **Problemas con Expo Go**
+   - Actualizar la aplicación Expo Go a la última versión
+   - Limpiar el caché de la aplicación
+
+## Contribución
+
+1. Fork el proyecto
+2. Crear una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abrir un Pull Request
+
+## Licencia
+
+Este proyecto está bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
